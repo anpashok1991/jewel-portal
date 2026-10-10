@@ -1,0 +1,736 @@
+// Multi-tenant Jeweller Portal — Prisma schema (SQLite dev / PostgreSQL prod ready)
+// SQLite notes: no native enums (String + TS constants), no Json columns (JSON text strings).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Theme {
+  id           String  @id @default(cuid())
+  key          String  @unique
+  name         String
+  description  String
+  colorsJson   String // {primary,accent,bg,surface,text,muted,gold,danger}
+  fontsJson    String // {display,body}
+  radius       String  @default("md")
+  layoutVariant String @default("classic") // hero/nav/card/grid variants
+  sceneVariant String  @default("rings") // 3d scene key
+  previewJson  String  @default("{}")
+  sortOrder    Int     @default(0)
+  shops        Shop[]
+}
+
+model Shop {
+  id            String  @id @default(cuid())
+  slug          String  @unique
+  customDomain  String? @unique // e.g. maaanjani.in — host header maps to this shop
+  name          String
+  tagline       String  @default("")
+  logo          String  @default("")
+  favicon       String  @default("")
+  contactEmail  String  @default("")
+  phone         String  @default("")
+  address       String  @default("")
+  state         String  @default("")
+  gstin         String  @default("")
+  pan           String  @default("")
+  status        String  @default("ACTIVE") // ACTIVE | BLOCKED | DRAFT
+  themeId       String
+  theme         Theme   @relation(fields: [themeId], references: [id])
+  planId        String?
+  plan          PlatformPlan? @relation(fields: [planId], references: [id])
+
+  // Settings — payments & communication (shop-owner editable)
+  whatsappNumber    String  @default("")
+  whatsappGreeting  String  @default("Hi! I need help.")
+  whatsappEnabled   Boolean @default(true)
+  upiVpa            String  @default("")
+  upiName           String  @default("")
+  razorpayKeyId     String  @default("")
+  razorpaySecret    String  @default("")
+  enableRazorpay    Boolean @default(true)
+  enableCod         Boolean @default(true)
+  codFeePaise       Int     @default(0)
+  codMaxPaise       Int     @default(20000000)
+  enableUpiQr       Boolean @default(true)
+  platformFeePaise  Int     @default(0)
+  platformFeePercentBp Int  @default(0) // basis points (100 = 1%)
+  gstPercentBp      Int     @default(1800) // 18.00%
+  freeShippingAbovePaise Int @default(500000)
+  shippingFlatPaise Int     @default(15000)
+  loyaltyEarnBp     Int     @default(100) // 1% of order value in points (1pt = Re1)
+  loyaltyRedeemMaxBp Int    @default(50)
+  announcement      String  @default("")
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  branches      Branch[]
+  users         User[]
+  categories    Category[]
+  products      Product[]
+  inventory     Inventory[]
+  metalRates    MetalRate[]
+  coupons       Coupon[]
+  giftCards     GiftCard[]
+  carts         Cart[]
+  wishlists     Wishlist[]
+  orders        Order[]
+  popups        Popup[]
+  banners       Banner[]
+  plans         SavingsPlan[]
+  schemeAccounts SchemeAccount[]
+  wallets       Wallet[]
+  appointments  Appointment[]
+  exchanges     ExchangeRequest[]
+  queries       Query[]
+  botFaqs       BotFaq[]
+  features      FeatureFlag[]
+  media         MediaAsset[]
+  invoices      Invoice[]
+  estimates     Estimate[]
+  notifications Notification[]
+}
+
+model PlatformPlan {
+  id          String  @id @default(cuid())
+  name        String
+  pricePaise  Int     @default(0)
+  featuresJson String @default("[]")
+  shops       Shop[]
+}
+
+model FeatureFlag {
+  id      String @id @default(cuid())
+  shopId  String
+  shop    Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  key     String
+  enabled Boolean @default(true)
+  note    String  @default("")
+
+  @@unique([shopId, key])
+}
+
+model Branch {
+  id        String  @id @default(cuid())
+  shopId    String
+  shop      Shop    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  name      String
+  address   String  @default("")
+  city      String  @default("")
+  phone     String  @default("")
+  gstin     String  @default("")
+  mapUrl    String  @default("")
+  hours     String  @default("10:00 AM - 9:00 PM")
+  isDefault Boolean @default(false)
+  active    Boolean @default(true)
+  createdAt DateTime @default(now())
+
+  inventory   Inventory[]
+  orders      Order[]
+  appointments Appointment[]
+}
+
+model PlatformUser {
+  id        String  @id @default(cuid())
+  email     String  @unique
+  name      String
+  phone     String  @default("")
+  passwordHash String
+  role      String  @default("SUPER_ADMIN") // SUPER_ADMIN | OWNER | STAFF | CUSTOMER
+  active    Boolean @default(true)
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id        String  @id @default(cuid())
+  email     String  @unique
+  phone     String  @default("")
+  name      String
+  passwordHash String
+  role      String  @default("CUSTOMER") // OWNER | STAFF | CUSTOMER
+  shopId    String?
+  shop      Shop?   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  active    Boolean @default(true)
+  avatar    String  @default("")
+  createdAt DateTime @default(now())
+
+  permissions Permission[]
+  addresses  Address[]
+  orders     Order[]
+  wishlists  Wishlist[]
+  reviews    Review[]
+  schemeAccounts SchemeAccount[]
+  wallets    Wallet[]
+  appointments Appointment[]
+  giftCards  GiftCard[]
+  notifications Notification[]
+}
+
+model Permission {
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module   String // products orders customers inventory queries reports schemes coupons staff settings popups media appointments
+  canView  Boolean @default(false)
+  canCreate Boolean @default(false)
+  canEdit  Boolean @default(false)
+  canDelete Boolean @default(false)
+
+  @@unique([userId, module])
+}
+
+model Category {
+  id       String  @id @default(cuid())
+  shopId   String
+  shop     Shop    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  slug     String
+  name     String
+  axis     String // MATERIAL | AUDIENCE | TYPE | OCCASION
+  image    String  @default("")
+  active   Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  productsType    Product[] @relation("TypeCat")
+  productsMaterial Product[] @relation("MaterialCat")
+  productsAudience Product[] @relation("AudienceCat")
+
+  @@unique([shopId, axis, slug])
+}
+
+model Product {
+  id          String  @id @default(cuid())
+  shopId      String
+  shop        Shop    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  slug        String
+  name        String
+  description String  @default("")
+  sku         String  @default("")
+
+  typeId      String
+  typeCat     Category @relation("TypeCat", fields: [typeId], references: [id])
+  materialId  String?
+  materialCat Category? @relation("MaterialCat", fields: [materialId], references: [id])
+  audienceId  String?
+  audienceCat Category? @relation("AudienceCat", fields: [audienceId], references: [id])
+
+  // Jewellery attributes
+  metal         String  @default("GOLD") // GOLD | SILVER | DIAMOND | PLATINUM | GEMSTONE
+  purity        String  @default("22K") // 24K | 22K | 18K | 14K | 925
+  netWeightMg   Int     @default(0)
+  grossWeightMg Int     @default(0)
+  fixedPricePaise Int   @default(0) // non-rate items (silver handicraft etc.); 0 = rate based
+  costPaise     Int     @default(0) // owner-entered purchase cost, for P&L reports
+  makingMode    String  @default("PERCENT") // PERCENT | PER_GRAM | FLAT | NONE
+  makingValue   Int     @default(1200) // percent bp / paise-per-gram / flat paise
+  stoneValuePaise Int   @default(0)
+  gstPercentBp  Int     @default(1800)
+  gstExempt     Boolean @default(false)
+  hsnCode       String  @default("7113")
+
+  imagesJson    String  @default("[]") // ["/uploads/..."]
+  videoUrl      String  @default("") // youtube url
+  certificateImg String @default("")
+
+  status        String  @default("ACTIVE") // DRAFT | ACTIVE | HIDDEN
+  featured      Boolean @default(false)
+  tags          String  @default("") // comma separated
+  soldCount     Int     @default(0)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  variants     ProductVariant[]
+  inventory    Inventory[]
+  cartItems    CartItem[]
+  orderItems   OrderItem[]
+  wishlists    Wishlist[]
+  reviews      Review[]
+
+  @@unique([shopId, slug])
+  @@index([shopId, status])
+}
+
+model ProductVariant {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  label     String // e.g. "Size 12" or "22K / 18in"
+  size      String  @default("")
+  sku       String  @default("")
+  extraWeightMg Int @default(0)
+  active    Boolean @default(true)
+}
+
+model Inventory {
+  id         String  @id @default(cuid())
+  shopId     String
+  shop       Shop    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantId  String  @default("")
+  branchId   String
+  branch     Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  qty        Int     @default(0)
+  lowStockAt Int     @default(2)
+  updatedAt  DateTime @updatedAt
+
+  @@unique([productId, variantId, branchId])
+  @@index([shopId])
+}
+
+model MetalRate {
+  id            String   @id @default(cuid())
+  shopId        String
+  shop          Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  metal         String // GOLD | SILVER | PLATINUM
+  purity        String // 999 | 916 | 750 | 640 | 925
+  pricePerGramPaise Int
+  effectiveAt   DateTime @default(now())
+  createdById   String   @default("")
+
+  @@index([shopId, metal, purity, effectiveAt])
+}
+
+model Address {
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String  @default("Home")
+  name      String
+  phone     String
+  line1     String
+  line2     String  @default("")
+  city      String
+  state     String
+  pincode   String
+  isDefault Boolean @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Cart {
+  id        String   @id @default(cuid())
+  userId    String
+  shopId    String
+  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  couponCode String  @default("")
+  giftCardCode String @default("")
+  useLoyalty Boolean @default(false)
+  branchId  String   @default("")
+  updatedAt DateTime @updatedAt
+
+  items CartItem[]
+
+  @@unique([userId, shopId])
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantId String  @default("")
+  qty       Int     @default(1)
+  branchId  String  @default("")
+}
+
+model Coupon {
+  id             String   @id @default(cuid())
+  shopId         String
+  shop           Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  code           String
+  description    String   @default("")
+  type           String // PERCENT | FLAT
+  value          Int // bp for percent, paise for flat
+  minOrderPaise  Int      @default(0)
+  maxDiscountPaise Int    @default(0)
+  startsAt       DateTime @default(now())
+  endsAt         DateTime
+  usageLimit     Int      @default(0) // 0 = unlimited
+  perUserLimit   Int      @default(1)
+  usedCount      Int      @default(0)
+  active         Boolean  @default(true)
+
+  @@unique([shopId, code])
+}
+
+model GiftCard {
+  id           String   @id @default(cuid())
+  shopId       String
+  shop         Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  code         String   @unique
+  balancePaise Int      @default(0)
+  initialPaise Int      @default(0)
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id])
+  active       Boolean  @default(true)
+  expiresAt    DateTime?
+  createdAt    DateTime @default(now())
+}
+
+model LoyaltyLedger {
+  id        String   @id @default(cuid())
+  shopId    String
+  userId    String
+  points    Int // 1 point = Re 1
+  reason    String
+  orderId   String?
+  createdAt DateTime @default(now())
+
+  @@index([shopId, userId])
+}
+
+model Wishlist {
+  id        String  @id @default(cuid())
+  shopId    String
+  shop      Shop    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  shopId    String
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int      @default(5)
+  comment   String   @default("")
+  approved  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id            String   @id @default(cuid())
+  number        String   @unique
+  shopId        String
+  shop          Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  branchId      String
+  branch        Branch   @relation(fields: [branchId], references: [id])
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+
+  status        String   @default("PLACED") // PLACED CONFIRMED PACKED SHIPPED DELIVERED CANCELLED RETURN_REQUESTED RETURNED REFUNDED
+  fulfillment   String   @default("DELIVERY") // DELIVERY | PICKUP
+
+  // money (paise)
+  subTotalPaise     Int @default(0)
+  discountPaise     Int @default(0)
+  couponCode        String @default("")
+  couponPaise       Int @default(0)
+  giftCardPaise     Int @default(0)
+  loyaltyPointsUsed Int @default(0)
+  loyaltyPaise      Int @default(0)
+  platformFeePaise  Int @default(0)
+  gstPaise          Int @default(0)
+  shippingPaise     Int @default(0)
+  codFeePaise       Int @default(0)
+  roundOffPaise     Int @default(0)
+  totalPaise        Int @default(0)
+
+  paymentMethod  String  @default("COD") // RAZORPAY | COD | UPI
+  paymentStatus  String  @default("PENDING") // PENDING | PAID | REFUNDED | FAILED
+  razorpayOrderId String @default("")
+  razorpayPaymentId String @default("")
+  refundStatus   String  @default("") // STARTED | SUCCESS | FAILED
+  refundPaise    Int     @default(0)
+
+  // address snapshot (json) + courier
+  addressJson   String   @default("{}")
+  courier       String   @default("")
+  awb           String   @default("")
+  etaDate       String   @default("")
+  cancelReason  String   @default("")
+  invoiceNumber String   @default("")
+
+  placedAt      DateTime @default(now())
+  shippedAt     DateTime?
+  deliveredAt   DateTime?
+  cancelledAt   DateTime?
+
+  items     OrderItem[]
+  events    OrderEvent[]
+  invoice   Invoice?
+  estimate  Estimate[]
+  notifications Notification[]
+
+  @@index([shopId, status])
+  @@index([shopId, placedAt])
+}
+
+model OrderItem {
+  id            String  @id @default(cuid())
+  orderId       String
+  order         Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product @relation(fields: [productId], references: [id])
+  variantId     String  @default("")
+  name          String
+  sku           String  @default("")
+  qty           Int     @default(1)
+  purity        String  @default("")
+  netWeightMg   Int     @default(0)
+  rateApplied   Int     @default(0) // paise per gram
+  metalPaise    Int     @default(0)
+  makingPaise   Int     @default(0)
+  stonePaise    Int     @default(0)
+  lineSubPaise  Int     @default(0)
+  discountPaise Int     @default(0)
+  gstPercentBp  Int     @default(0)
+  gstExempt     Boolean @default(false)
+  gstPaise      Int     @default(0)
+  lineTotalPaise Int    @default(0)
+  hsnCode       String  @default("")
+}
+
+model OrderEvent {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    String
+  note      String   @default("")
+  actor     String   @default("")
+  createdAt DateTime @default(now())
+}
+
+model Invoice {
+  id        String   @id @default(cuid())
+  shopId    String
+  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  orderId   String   @unique
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  number    String   @unique
+  issuedAt  DateTime @default(now())
+}
+
+model Estimate {
+  id        String   @id @default(cuid())
+  shopId    String
+  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  number    String   @unique
+  orderId   String?
+  order     Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  userId    String?
+  customerName String @default("")
+  customerPhone String @default("")
+  linesJson String   @default("[]")
+  totalsJson String  @default("{}")
+  createdAt DateTime @default(now())
+}
+
+model Popup {
+  id         String   @id @default(cuid())
+  shopId     String
+  shop       Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  title      String
+  body       String   @default("")
+  image      String   @default("")
+  videoUrl   String   @default("")
+  trigger    String   @default("VISIT") // VISIT | LOGIN | EXIT
+  chipsJson  String   @default("[]") // [{label, href}]
+  ctaLabel   String   @default("")
+  ctaHref    String   @default("")
+  frequency  String   @default("SESSION") // ONCE | SESSION | DAILY
+  startAt    DateTime @default(now())
+  endAt      DateTime?
+  active     Boolean  @default(true)
+  sortOrder  Int      @default(0)
+}
+
+model Banner {
+  id        String   @id @default(cuid())
+  shopId    String
+  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  title     String
+  subtitle  String   @default("")
+  image     String   @default("")
+  videoUrl  String   @default("")
+  href      String   @default("")
+  placement String   @default("HERO") // HERO | STRIP | SECTION
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+}
+
+model SavingsPlan {
+  id            String   @id @default(cuid())
+  shopId        String
+  shop          Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  name          String
+  description   String   @default("")
+  frequency     String // DAILY | WEEKLY | MONTHLY | CUSTOM
+  customDays    String   @default("") // "1,15" or "MON,WED"
+  amountPaise   Int
+  tenureCount   Int // number of installments
+  mode          String // ROI | GOLD
+  roiPercentBp  Int      @default(800) // 8.00%
+  goldBonusBp   Int      @default(0)
+  minJoinPaise  Int      @default(0)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  accounts SchemeAccount[]
+}
+
+model SchemeAccount {
+  id          String   @id @default(cuid())
+  shopId      String
+  shop        Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  planId      String
+  plan        SavingsPlan @relation(fields: [planId], references: [id])
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountNo   String   @unique
+  status      String   @default("ACTIVE") // ACTIVE | MATURED | SETTLED | CANCELLED
+  startedAt   DateTime @default(now())
+  maturesAt   DateTime
+  totalPaidPaise Int   @default(0)
+  goldMgAccrued  Int   @default(0)
+  roiPaise    Int      @default(0)
+  settledAt   DateTime?
+  settledMode String   @default("") // WALLET | GOLD | PURCHASE
+
+  deposits Deposit[]
+
+  @@index([shopId, userId])
+}
+
+model Deposit {
+  id           String   @id @default(cuid())
+  accountId    String
+  account      SchemeAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  seq          Int      @default(1)
+  dueDate      DateTime
+  paidAt       DateTime?
+  amountPaise  Int      @default(0)
+  goldMgAtPay  Int      @default(0) // gold bought at payment time
+  rateUsedPaise Int     @default(0)
+  status       String   @default("DUE") // DUE | PAID | SKIPPED
+  method       String   @default("") // WALLET | RAZORPAY | COD | COUNTER
+}
+
+model Wallet {
+  id           String   @id @default(cuid())
+  shopId       String
+  shop         Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balancePaise Int      @default(0)
+  goldMg       Int      @default(0)
+  updatedAt    DateTime @updatedAt
+
+  txns WalletTxn[]
+
+  @@unique([userId, shopId])
+}
+
+model WalletTxn {
+  id         String   @id @default(cuid())
+  walletId   String
+  wallet     Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  type       String // CREDIT | DEBIT | GOLD_CREDIT | GOLD_DEBIT
+  amountPaise Int     @default(0)
+  goldMg     Int      @default(0)
+  reason     String
+  orderId    String?
+  createdAt  DateTime @default(now())
+}
+
+model Appointment {
+  id        String   @id @default(cuid())
+  shopId    String
+  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  branchId  String
+  branch    Branch   @relation(fields: [branchId], references: [id])
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  name      String
+  phone     String
+  email     String   @default("")
+  date      String // YYYY-MM-DD
+  slot      String // "11:00"
+  service   String   @default("Consultation")
+  message   String   @default("")
+  status    String   @default("PENDING") // PENDING | CONFIRMED | CANCELLED | COMPLETED
+  createdAt DateTime @default(now())
+}
+
+model ExchangeRequest {
+  id        String   @id @default(cuid())
+  shopId    String
+  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  userId    String?
+  name      String
+  phone     String
+  metal     String   @default("GOLD")
+  purity    String   @default("22K")
+  grossWeightG Int   @default(0)
+  note      String   @default("")
+  imagesJson String  @default("[]")
+  estValuePaise Int  @default(0)
+  status    String   @default("NEW") // NEW | QUOTED | ACCEPTED | REJECTED
+  createdAt DateTime @default(now())
+}
+
+model Query {
+  id        String   @id @default(cuid())
+  shopId    String
+  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  userId    String?
+  name      String
+  phone     String   @default("")
+  email     String   @default("")
+  subject   String   @default("")
+  message   String   @default("")
+  source    String   @default("CONTACT") // CONTACT | SAMBOT | POPUP | WHATSAPP | CHECKOUT
+  status    String   @default("NEW") // NEW | IN_PROGRESS | RESOLVED
+  createdAt DateTime @default(now())
+}
+
+model BotFaq {
+  id       String  @id @default(cuid())
+  shopId   String
+  shop     Shop    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  question String
+  answer   String
+  keywords String  @default("")
+  active   Boolean @default(true)
+  sortOrder Int     @default(0)
+}
+
+model MediaAsset {
+  id        String   @id @default(cuid())
+  shopId    String
+  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  path      String
+  kind      String   @default("IMAGE") // IMAGE | VIDEO
+  alt       String   @default("")
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  shopId    String?
+  shop      Shop?    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String   @default("")
+  link      String   @default("")
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  orderId   String?
+  order     Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+}
