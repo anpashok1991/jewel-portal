@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, typecheck, unit tests, build, e2e
+    runs-on: ubuntu-latest
+    env:
+      AUTH_SECRET: ci-not-a-real-secret
+      DATABASE_URL: file:./dev.db
+      # Playwright's webServer (see playwright.config.ts) serves the production
+      # build on :3100; tenant resolution falls back to path-based /{slug} routing
+      # when no custom-domain Host header is present, so no TENANT_HOST_MAP needed.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        run: npx eslint src e2e tests prisma vitest.config.ts playwright.config.ts --max-warnings=0
+
+      - name: Unit tests (Vitest)
+        run: npm test
+
+      - name: Next.js build
+        run: npx next build
+
+      - name: Playwright e2e
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:e2e
+
+      - name: Upload Playwright trace on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
