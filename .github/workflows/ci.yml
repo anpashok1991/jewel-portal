@@ -36,6 +36,11 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate
 
+      - name: Create database and seed demo data
+        run: |
+          npx prisma db push
+          npm run seed
+
       - name: Typecheck
         run: npx tsc --noEmit
 
