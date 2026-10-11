@@ -96,9 +96,9 @@ npx eslint src e2e tests prisma vitest.config.ts playwright.config.ts --max-warn
 npm run test:e2e      # Playwright — needs `npm run build` first
 ```
 
-Unit coverage: pricing/GST/coupons, order transitions, savings schemes, money formatting, UPI helpers, CSV export.
+Unit coverage: pricing/GST/coupons, order transitions, savings schemes, money formatting, UPI helpers, CSV export, JSON API helpers.
 
-E2E (Playwright, `e2e/`) covers the landing page, domain/tenancy routing, storefront + cart/checkout, the full customer journey (place order → owner confirms), the shop admin (including category-icon editing), the super console (including the delete danger zone) and responsive breakpoints. It boots a production build on `:3100` and resets branch inventory before the suite.
+E2E (Playwright, `e2e/`) covers the landing page, domain/tenancy routing, storefront + cart/checkout, the full customer journey (place order → owner confirms), the shop admin (including category-icon editing), the super console (including the delete danger zone), responsive breakpoints and the `/api/v1` mobile contract (login → cart → COD checkout → orders). It boots a production build on `:3100` and resets branch inventory before the suite.
 
 Every push and PR to `main` runs the full gate set in GitHub Actions (`.github/workflows/ci.yml`): typecheck → lint → unit tests → `next build` → Playwright e2e.
 
@@ -106,7 +106,7 @@ Every push and PR to `main` runs the full gate set in GitHub Actions (`.github/w
 
 - SQLite file `dev.db` — swap `provider` in `prisma/schema.prisma` for Postgres/MySQL in production and set `DATABASE_URL`.
 - Razorpay keys, GSTIN, WhatsApp number, theme and features are all editable at `/{slug}/admin/settings`.
-- API-first design: all mutations are server actions or `/api/*` routes, ready for a future Android client.
+- **Android-ready REST API** (`/api/v1`, [docs/API.md](docs/API.md)): Bearer-token auth (`Authorization: Bearer <jwt>`), shops/catalog/cart/checkout/orders — same domain logic as the web storefront.
 - Configuration via env — copy `.env.example` to `.env`: `AUTH_SECRET`, optional `TENANT_HOST_MAP`.
 
 ## License

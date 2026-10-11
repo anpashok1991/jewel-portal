@@ -27,7 +27,7 @@ Host-based clean URLs: `proxy.ts` rewrites hostname → `/{slug}/...` using `TEN
 `login`, `dashboard`, `shops` (+create shop w/ owner login, block/unblock, feature flags per shop), `plans` (CRUD), `users` (platform console access)
 
 ### APIs — `/api/*`
-`upload` (media, OWNER/STAFF) · `chat` (Sam Bot) · `orders/[id]/invoice` (GST PDF, staff+customer) · `payments/verify` (Razorpay signature)
+`v1/…` mobile REST (see [API.md](API.md)) · `upload` (media, OWNER/STAFF) · `chat` (Sam Bot) · `orders/[id]/invoice` (GST PDF, staff+customer) · `payments/verify` (Razorpay signature)
 
 ## 2. Key flows
 

@@ -61,6 +61,14 @@ async function hostToSlug(host: string): Promise<string | null> {
 
 const isStatic = (p: string) => /\.[a-z0-9]+$/i.test(p);
 
+/** CORS for /api (incl. /api/v1) so Android/WebView and other origins can call the JSON API. */
+const API_CORS_HEADERS: Record<string, string> = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Max-Age": "86400",
+};
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const rawHost = request.headers.get("host") ?? "";
@@ -68,6 +76,14 @@ export async function proxy(request: NextRequest) {
   const hasSession = Boolean(request.cookies.get(SESSION_COOKIE)?.value);
 
   if (pathname.startsWith("/api") || pathname.startsWith("/_next") || isStatic(pathname)) {
+    if (pathname.startsWith("/api")) {
+      if (request.method === "OPTIONS") {
+        return new NextResponse(null, { status: 204, headers: API_CORS_HEADERS });
+      }
+      const res = NextResponse.next();
+      for (const [k, v] of Object.entries(API_CORS_HEADERS)) res.headers.set(k, v);
+      return res;
+    }
     return NextResponse.next();
   }
 

@@ -4,6 +4,7 @@ import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 import { cache } from "react";
 import { db } from "./db";
+import { bearerToken } from "./api";
 import type { Role } from "./constants";
 
 const COOKIE = "jp_session";
@@ -52,8 +53,10 @@ export async function clearSessionCookie() {
 }
 
 export async function getSession(): Promise<Session | null> {
+  // Works for web (cookie) and native clients e.g. Android (Authorization: Bearer <token>).
   const jar = await cookies();
-  const token = jar.get(COOKIE)?.value;
+  const headerAuth = (await headers()).get("authorization");
+  const token = bearerToken(headerAuth) ?? jar.get(COOKIE)?.value;
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, secret);

@@ -21,7 +21,8 @@ npx next build                # must succeed
 
 - Money = integer **paise**, weight = integer **milligrams** (`src/lib/money.ts` helpers).
 - SQLite → `String` columns for JSON (`imagesJson` etc.); parse via `catalog.parseImages`.
-- Auth: `jp_session` cookie; pools `shop` (OWNER/STAFF/CUSTOMER) and `platform` (SUPER_ADMIN). `requireSession()` throws plain `Error("UNAUTHORIZED")` — pages use `getSession()` + `redirect()` instead.
+- Auth: `jp_session` cookie; pools `shop` (OWNER/STAFF/CUSTOMER) and `platform` (SUPER_ADMIN). `requireSession()` throws plain `Error("UNAUTHORIZED")` — pages use `getSession()` + `redirect()` instead. `getSession()` also accepts `Authorization: Bearer <jwt>` (same token) for native/mobile callers.
+- Android/native REST lives under `src/app/api/v1/*` (see `docs/API.md`); web mutations stay as server actions.
 - Server actions: plain `<form action>` → `(formData)`; `useActionState` → `(prev, formData)`.
 - Multi-tenant routes are path-scoped `/{slug}/...`; guard with `requireTenant(slug)` and feature-gate with `hasFeature(tenant, key)`.
 - Admin RBAC: `can(session, module, action)` from `src/lib/auth.ts`; modules in `PERMISSION_MODULES`.
