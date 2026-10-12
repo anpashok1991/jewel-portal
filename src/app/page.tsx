@@ -65,7 +65,7 @@ export default async function LandingPage() {
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <a href="#shops" className="btn btn-primary !min-h-12 px-6">Explore shops</a>
           <Link href="/super/login" className="btn !min-h-12 px-6" style={{ border: "1px solid rgba(255,255,255,.2)", color: "#f5f1e8" }}>
-            Platform login
+            Super admin login
           </Link>
         </div>
       </section>

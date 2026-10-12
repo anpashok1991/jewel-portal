@@ -9,8 +9,7 @@
   </defs>
   <rect width="900" height="520" fill="url(#g)"/>
   <rect width="900" height="520" fill="url(#shine)"/>
-  <circle cx="450" cy="220" r="150" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="3"/>
-  <circle cx="450" cy="220" r="110" fill="none" stroke="#ffffff" stroke-opacity="0.5" stroke-width="1.5"/>
-  <text x="50%" y="235" text-anchor="middle" font-family="Georgia, serif" font-size="92" fill="#ffffff" fill-opacity="0.95">BPF</text>
-  <text x="50%" y="315" text-anchor="middle" font-family="Georgia, serif" font-size="34" fill="#ffffff" fill-opacity="0.9">Best Picks for Your Budget</text>
+  <circle cx="450" cy="260" r="150" fill="none" stroke="#ffffff" stroke-opacity="0.28" stroke-width="3"/>
+  <circle cx="450" cy="260" r="110" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1.5"/>
+  <text x="50%" y="274" text-anchor="middle" font-family="Georgia, serif" font-size="44" fill="#ffffff" fill-opacity="0.95">Best Picks for Your Budget</text>
 </svg>

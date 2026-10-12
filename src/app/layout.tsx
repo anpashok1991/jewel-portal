@@ -12,16 +12,20 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-scroll-behavior="smooth" className="h-full">
+    // suppressHydrationWarning: browser extensions (translation, AI assistants…) may add
+    // attributes to <html>/<body> before React hydrates — tolerate that without a re-render.
+    <html lang="en" data-scroll-behavior="smooth" className="h-full" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font -- App Router root layout: single font stylesheet for all routes; media=print keeps it non-blocking so hydration (and Link clicks) start immediately */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Cormorant+Garamond:wght@500;700&family=Bodoni+Moda:wght@500;700&family=Yatra+One&family=Sora:wght@400;700&family=Inter:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-          media="print"
-          data-fonts=""
+        {/* Non-blocking Google Fonts: the stylesheet is injected by script (not SSR'd),
+            so React hydration never mismatches on a mutated <link> (that mismatch caused
+            a full-tree re-render flash + the dev "1 Issue" badge on every page load). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              '(function(){var l=document.createElement("link");l.rel="stylesheet";l.href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Cormorant+Garamond:wght@500;700&family=Bodoni+Moda:wght@500;700&family=Yatra+One&family=Sora:wght@400;700&family=Inter:wght@400;500;600;700&display=swap";document.head.appendChild(l)})()',
+          }}
         />
         <noscript>
           {/* eslint-disable-next-line @next/next/no-page-custom-font -- no-JS fallback: apply fonts normally */}
@@ -30,14 +34,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             rel="stylesheet"
           />
         </noscript>
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              "document.querySelectorAll('link[data-fonts]').forEach(function(l){l.addEventListener('load',function(){l.media='all'})})",
-          }}
-        />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>{children}</body>
     </html>
   );
 }

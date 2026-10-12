@@ -14,12 +14,8 @@ const IMG_DIR = path.join(process.cwd(), "public", "uploads", "seed");
 async function svg(name: string, from: string, to: string, label: string, w = 900, h = 900): Promise<string> {
   await fs.mkdir(IMG_DIR, { recursive: true });
   const file = path.join(IMG_DIR, `${name}.svg`);
-  const initials = label
-    .split(/\s+/)
-    .slice(0, 3)
-    .map((s) => s[0])
-    .join("")
-    .toUpperCase();
+  // Keep the label centered on both axes so object-cover crops (banners/popups) never cut it.
+  const text = label.replace(/&/g, "&amp;").replace(/</g, "&lt;");
   const svgText = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
   <defs>
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
@@ -31,10 +27,9 @@ async function svg(name: string, from: string, to: string, label: string, w = 90
   </defs>
   <rect width="${w}" height="${h}" fill="url(#g)"/>
   <rect width="${w}" height="${h}" fill="url(#shine)"/>
-  <circle cx="${w / 2}" cy="${h / 2 - 40}" r="150" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="3"/>
-  <circle cx="${w / 2}" cy="${h / 2 - 40}" r="110" fill="none" stroke="#ffffff" stroke-opacity="0.5" stroke-width="1.5"/>
-  <text x="50%" y="${h / 2 - 25}" text-anchor="middle" font-family="Georgia, serif" font-size="92" fill="#ffffff" fill-opacity="0.95">${initials}</text>
-  <text x="50%" y="${h / 2 + 55}" text-anchor="middle" font-family="Georgia, serif" font-size="34" fill="#ffffff" fill-opacity="0.9">${label}</text>
+  <circle cx="${w / 2}" cy="${h / 2}" r="150" fill="none" stroke="#ffffff" stroke-opacity="0.28" stroke-width="3"/>
+  <circle cx="${w / 2}" cy="${h / 2}" r="110" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1.5"/>
+  <text x="50%" y="${h / 2 + 14}" text-anchor="middle" font-family="Georgia, serif" font-size="44" fill="#ffffff" fill-opacity="0.95">${text}</text>
 </svg>`;
   await fs.writeFile(file, svgText, "utf8");
   return `/uploads/seed/${name}.svg`;
