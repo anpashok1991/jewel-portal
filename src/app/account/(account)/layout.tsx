@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
+import { getSession, nonCustomerHome } from "@/lib/auth";
 import { logout } from "@/actions/auth";
 
 export const metadata = { title: "My Account" };
@@ -16,6 +16,9 @@ const NAV = [
 export default async function AccountLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
   if (!session) redirect("/account/login");
+  // Super admin / owner / staff cookies must not bounce /account ↔ /account/login.
+  const home = await nonCustomerHome(session);
+  if (home) redirect(home);
 
   return (
     <div className="min-h-screen" style={{ background: "var(--c-bg, #fdfaf4)", color: "var(--c-text, #1f1a17)" }}>

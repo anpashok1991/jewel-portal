@@ -68,6 +68,23 @@ export async function getSession(): Promise<Session | null> {
 
 export const currentSession = cache(getSession);
 
+/**
+ * Where a non-customer session belongs (super admin → /super, owner/staff → shop admin).
+ * Returns null for CUSTOMER sessions (or if an owner/staff has no shop).
+ * Used by the customer account routes so a super-admin/owner cookie can never
+ * bounce /account ↔ /account/login in a redirect loop.
+ */
+export async function nonCustomerHome(s: Session): Promise<string | null> {
+  if (s.role === "SUPER_ADMIN") return "/super";
+  if (s.role === "OWNER" || s.role === "STAFF") {
+    const shop = s.shopId
+      ? await db.shop.findUnique({ where: { id: s.shopId }, select: { slug: true } })
+      : null;
+    return shop ? `/${shop.slug}/admin` : "/";
+  }
+  return null;
+}
+
 export async function requireSession(): Promise<Session> {
   const s = await getSession();
   if (!s) throw new Error("UNAUTHORIZED");

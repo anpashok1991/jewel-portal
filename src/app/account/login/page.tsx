@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { getSession, nonCustomerHome } from "@/lib/auth";
 import { LoginForm } from "@/components/account/AuthForms";
 
 export const metadata = { title: "Sign in" };
@@ -9,7 +9,12 @@ export const metadata = { title: "Sign in" };
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { next = "" } = await searchParams;
   const session = await getSession();
-  if (session) redirect(next.startsWith("/") ? next : "/account");
+  if (session) {
+    const home = await nonCustomerHome(session);
+    if (home) redirect(home);
+    const user = await db.user.findUnique({ where: { id: session.uid }, select: { id: true } });
+    if (user) redirect(next.startsWith("/") ? next : "/account");
+  }
   const staffShop = await db.shop.findFirst({ where: { status: "ACTIVE" }, select: { slug: true } });
 
   return (

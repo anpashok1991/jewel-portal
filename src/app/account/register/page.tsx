@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { getSession, nonCustomerHome } from "@/lib/auth";
 import { RegisterForm } from "@/components/account/AuthForms";
 
 export const metadata = { title: "Create account" };
@@ -9,7 +9,12 @@ export const metadata = { title: "Create account" };
 export default async function RegisterPage({ searchParams }: { searchParams: Promise<{ next?: string; shop?: string }> }) {
   const { next = "", shop = "" } = await searchParams;
   const session = await getSession();
-  if (session) redirect(next.startsWith("/") ? next : "/account");
+  if (session) {
+    const home = await nonCustomerHome(session);
+    if (home) redirect(home);
+    const user = await db.user.findUnique({ where: { id: session.uid }, select: { id: true } });
+    if (user) redirect(next.startsWith("/") ? next : "/account");
+  }
 
   const shops = await db.shop.findMany({
     where: { status: "ACTIVE" },
