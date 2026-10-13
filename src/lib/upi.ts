@@ -19,8 +19,11 @@ export function buildUpiUrl(opts: {
 }
 
 export function waMeUrl(number: string, message: string): string {
-  const digits = number.replace(/[^\d]/g, "");
-  const withCountry = digits.startsWith("91") ? digits : `91${digits}`;
+  let digits = number.replace(/[^\d]/g, "");
+  if (digits.startsWith("0")) digits = digits.slice(1); // trunk prefix (09876543210)
+  // ≤10 digits = national number (even if it starts with 91 — e.g. 9123456780);
+  // longer = assumed to already carry the country code (919876543210).
+  const withCountry = digits.length > 10 ? digits : `91${digits}`;
   return `https://wa.me/${withCountry}?text=${encodeURIComponent(message)}`;
 }
 

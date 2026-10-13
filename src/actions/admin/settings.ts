@@ -107,6 +107,7 @@ export async function saveWhatsApp(_prev: ManageState, fd: FormData): Promise<Ma
       whatsappNumber: number,
       whatsappGreeting: String(fd.get("whatsappGreeting") ?? "").trim() || "Hi! I need help.",
       whatsappEnabled: fd.get("whatsappEnabled") === "on",
+      whatsappOrderShare: fd.get("whatsappOrderShare") === "on",
     },
   });
   await revalidateSettings(s.shopId);

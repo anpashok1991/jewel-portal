@@ -44,6 +44,7 @@ export type Tenant = {
   whatsappNumber: string;
   whatsappGreeting: string;
   whatsappEnabled: boolean;
+  whatsappOrderShare: boolean;
   upiVpa: string;
   upiName: string;
   razorpayKeyId: string;
@@ -103,6 +104,7 @@ export const getTenant = cache(async function getTenant(slug: string): Promise<T
     whatsappNumber: shop.whatsappNumber,
     whatsappGreeting: shop.whatsappGreeting,
     whatsappEnabled: shop.whatsappEnabled,
+    whatsappOrderShare: shop.whatsappOrderShare,
     upiVpa: shop.upiVpa,
     upiName: shop.upiName,
     razorpayKeyId: shop.razorpayKeyId,

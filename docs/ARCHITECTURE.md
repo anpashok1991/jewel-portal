@@ -48,7 +48,8 @@ total        = taxable + gst + shipping + codFee − roundOff
 - Redemption: checkout accepts wallet money and gold mg (converted at current rate).
 
 ## Payments (FR-18)
-- Settings per shop: `razorpayKeyId/Secret`, `upiVpa`, `upiName`, `codFee`, `codMaxAmount`, `whatsappNumber`.
+- Settings per shop: `razorpayKeyId/Secret`, `upiVpa`, `upiName`, `codFee`, `codMaxAmount`, `whatsappNumber/whatsappGreeting/whatsappEnabled/whatsappOrderShare`.
+- WhatsApp is free-tier only (no Meta API): `whatsappOrderShare` toggle drives `wa.me` purchase-details deep links on order pages (admin order detail → customer number; storefront order page → shop number), built by `src/lib/whatsapp.ts`.
 - `POST /api/razorpay/create` → order (amount paise) → client `Razorpaycheckout` → `POST /api/razorpay/verify` (HMAC SHA256) → order CONFIRMED; webhook path idempotent.
 - UPI QR: build `upi://pay?pa=&pn=&am=&cu=INR&tn=` → `qrcode.toDataURL` server-side.
 - Refunds on cancel: mark `refundStatus` + create wallet credit fallback if keys missing (test mode).

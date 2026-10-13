@@ -6,6 +6,8 @@ import { formatINR } from "@/lib/money";
 import { statusLabel } from "@/lib/order-state";
 import { ORDER_TRANSITIONS, type OrderStatus } from "@/lib/constants";
 import { applyOrderStatus, markRefunded } from "@/actions/admin/orders";
+import { requestOrigin } from "@/lib/auth";
+import { purchaseDetailsMessage, waMeUrl } from "@/lib/whatsapp";
 
 export const metadata = { title: "Order detail · Admin" };
 export const dynamic = "force-dynamic";
@@ -51,6 +53,30 @@ export default async function AdminOrderDetail({
   })();
   const transitions = ORDER_TRANSITIONS[order.status as OrderStatus] ?? [];
   const paid = order.paymentStatus === "PAID";
+
+  const customerPhone = (order.user.phone || addr.phone || "").replace(/[^\d]/g, "");
+  const waMessage = purchaseDetailsMessage({
+    shopName: tenant.name,
+    orderNumber: order.number,
+    placedAt: order.placedAt,
+    status: order.status,
+    paymentMethod: order.paymentMethod,
+    paymentStatus: order.paymentStatus,
+    items: order.items.map((it) => ({
+      name: it.name,
+      purity: it.purity,
+      qty: it.qty,
+      netWeightMg: it.netWeightMg,
+      lineTotalPaise: it.lineTotalPaise,
+    })),
+    subTotalPaise: order.subTotalPaise,
+    discountPaise: order.discountPaise + order.couponPaise + order.loyaltyPaise + order.giftCardPaise || undefined,
+    shippingPaise: order.shippingPaise || undefined,
+    gstPaise: order.gstPaise,
+    totalPaise: order.totalPaise,
+    trackUrl: `${await requestOrigin()}/${slug}/order/${order.id}`,
+    intro: `Namaste ${order.user.name}, here are your purchase details from ${tenant.name}:`,
+  });
 
   return (
     <div className="space-y-5">
@@ -140,6 +166,17 @@ export default async function AdminOrderDetail({
             ) : (
               <p className="text-sm text-muted mt-2">Store pickup at {order.branch.name}<br />{order.branch.address}</p>
             )}
+            {tenant.whatsappOrderShare && customerPhone ? (
+              <a
+                href={waMeUrl(customerPhone, waMessage)}
+                target="_blank"
+                rel="noreferrer"
+                className="btn !min-h-10 text-sm w-full mt-3"
+                style={{ background: "#25D366", color: "#fff" }}
+              >
+                Send purchase details on WhatsApp
+              </a>
+            ) : null}
           </section>
 
           <section className="card p-5">

@@ -49,6 +49,7 @@ model Shop {
   whatsappNumber    String  @default("")
   whatsappGreeting  String  @default("Hi! I need help.")
   whatsappEnabled   Boolean @default(true)
+  whatsappOrderShare Boolean @default(true) // shop-admin toggle: share purchase details over WhatsApp (free wa.me links)
   upiVpa            String  @default("")
   upiName           String  @default("")
   razorpayKeyId     String  @default("")

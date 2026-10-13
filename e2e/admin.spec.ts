@@ -29,6 +29,10 @@ test.describe("shop admin", () => {
     await expect(page).toHaveURL(/\/admin\/orders\//);
     // order detail shows transition controls or a "no further transitions" note
     await expect(page.getByText(/status|transition|timeline/i).first()).toBeVisible();
+    // free WhatsApp purchase-details deep link (wa.me) → customer's number
+    const waBtn = page.getByRole("link", { name: "Send purchase details on WhatsApp" });
+    await expect(waBtn).toBeVisible();
+    expect(await waBtn.getAttribute("href")).toMatch(/^https:\/\/wa\.me\/91\d+\?text=/);
   });
 
   // PLACED→CONFIRMED transition is covered in customer.spec.ts (fresh order each run).
@@ -78,5 +82,13 @@ test.describe("shop admin", () => {
     await adminLogin(page, "staff@maaanjani.in", "Staff@123");
     await page.goto(`/${SLUG}/admin/settings`, { waitUntil: "domcontentloaded" });
     await expect(page).not.toHaveURL(/\/admin\/settings$/);
+  });
+
+  test("owner can configure WhatsApp purchase-details sharing", async ({ page }) => {
+    await adminLogin(page, "owner@maaanjani.in", "Owner@123");
+    await page.goto(`/${SLUG}/admin/settings`, { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { name: "WhatsApp" })).toBeVisible();
+    await expect(page.getByLabel(/Send purchase details over WhatsApp/i)).toBeVisible();
+    await expect(page.getByLabel(/Show WhatsApp button on storefront/i)).toBeVisible();
   });
 });

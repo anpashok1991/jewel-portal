@@ -25,6 +25,7 @@ export type ShopSeed = {
   whatsappNumber: string;
   whatsappGreeting: string;
   whatsappEnabled: boolean;
+  whatsappOrderShare: boolean;
   upiVpa: string;
   upiName: string;
   razorpayKeyId: string;
@@ -192,6 +193,9 @@ export function WhatsAppForm({ shop }: { shop: ShopSeed }) {
       </div>
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" name="whatsappEnabled" defaultChecked={shop.whatsappEnabled} /> Show WhatsApp button on storefront
+      </label>
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="whatsappOrderShare" defaultChecked={shop.whatsappOrderShare} /> Send purchase details over WhatsApp (order pages)
       </label>
       <Msg state={state} />
       <button className="btn btn-primary" disabled={pending}>{pending ? "Saving…" : "Save WhatsApp"}</button>

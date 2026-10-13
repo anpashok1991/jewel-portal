@@ -59,6 +59,11 @@ test.describe("customer journey", () => {
     await expect(page).toHaveURL(new RegExp(`/${SLUG}/order/`), { timeout: 30_000 });
     await expect(page.getByText(/MAA-|order/i).first()).toBeVisible();
 
+    // order page offers the free WhatsApp purchase-details deep link → shop number
+    const waBtn = page.getByRole("link", { name: "Send purchase details on WhatsApp" });
+    await expect(waBtn).toBeVisible();
+    expect(await waBtn.getAttribute("href")).toMatch(/^https:\/\/wa\.me\/91\d+\?text=/);
+
     // order appears in account (cards, not a table)
     await page.goto("/account/orders", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { level: 1 })).toContainText(/order/i);

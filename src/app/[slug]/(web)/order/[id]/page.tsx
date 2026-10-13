@@ -3,9 +3,10 @@ import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { requireTenant } from "@/lib/tenant";
 import { db } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { getSession, requestOrigin } from "@/lib/auth";
 import { statusLabel, customerCanCancel } from "@/lib/order-state";
 import { formatINR, formatWeightMg } from "@/lib/money";
+import { purchaseDetailsMessage, waMeUrl } from "@/lib/whatsapp";
 import UpiQr from "@/components/store/UpiQr";
 import { CancelButton, ReturnButton } from "@/components/store/OrderActions";
 
@@ -56,6 +57,35 @@ export default async function OrderPage(props: { params: Promise<{ slug: string;
     ...(order.codFeePaise ? ([["COD fee", order.codFeePaise]] as [string, number][]) : []),
     ...(order.roundOffPaise ? ([["Round off", order.roundOffPaise]] as [string, number][]) : []),
   ];
+
+  const waHref =
+    tenant.whatsappOrderShare && tenant.whatsappNumber
+      ? waMeUrl(
+          tenant.whatsappNumber,
+          purchaseDetailsMessage({
+            shopName: tenant.name,
+            orderNumber: order.number,
+            placedAt: order.placedAt,
+            status: order.status,
+            paymentMethod: order.paymentMethod,
+            paymentStatus: order.paymentStatus,
+            items: order.items.map((it) => ({
+              name: it.name,
+              purity: it.purity,
+              qty: it.qty,
+              netWeightMg: it.netWeightMg,
+              lineTotalPaise: it.lineTotalPaise,
+            })),
+            subTotalPaise: order.subTotalPaise,
+            discountPaise: order.discountPaise + order.couponPaise + order.loyaltyPaise + order.giftCardPaise || undefined,
+            shippingPaise: order.shippingPaise || undefined,
+            gstPaise: order.gstPaise,
+            totalPaise: order.totalPaise,
+            trackUrl: `${await requestOrigin()}/${slug}/order/${order.id}`,
+            intro: `Namaste ${tenant.name}, here are my purchase details:`,
+          }),
+        )
+      : null;
 
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8 sm:py-12">
@@ -204,6 +234,17 @@ export default async function OrderPage(props: { params: Promise<{ slug: string;
             ) : (
               <p className="text-xs text-muted">GST invoicing is disabled for this shop.</p>
             )}
+            {waHref ? (
+              <a
+                href={waHref}
+                target="_blank"
+                rel="noreferrer"
+                className="btn w-full"
+                style={{ background: "#25D366", color: "#fff" }}
+              >
+                Send purchase details on WhatsApp
+              </a>
+            ) : null}
             <Link href={`/${slug}/contact`} className="btn btn-ghost w-full">Need help?</Link>
           </div>
 

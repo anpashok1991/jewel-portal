@@ -32,6 +32,12 @@ describe("waMeUrl", () => {
   it("strips formatting characters", () => {
     expect(waMeUrl("+91 98765-43210", "ok")).toBe("https://wa.me/919876543210?text=ok");
   });
+  it("treats 10-digit numbers starting with 91 as national", () => {
+    expect(waMeUrl("9123456780", "hi")).toBe("https://wa.me/919123456780?text=hi");
+  });
+  it("strips a trunk-prefix zero before adding the country code", () => {
+    expect(waMeUrl("09876543210", "hi")).toBe("https://wa.me/919876543210?text=hi");
+  });
 });
 
 describe("youtubeId", () => {
