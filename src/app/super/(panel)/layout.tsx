@@ -7,6 +7,7 @@ import { AdminNav, type NavItem } from "@/components/admin/AdminNav";
 const NAV: NavItem[] = [
   { href: "/super", label: "Dashboard" },
   { href: "/super/shops", label: "Shops" },
+  { href: "/super/handover", label: "Handover" },
   { href: "/super/plans", label: "Plans" },
   { href: "/super/users", label: "Users" },
   { href: "/super/flow", label: "App flow" },

@@ -20,7 +20,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }
     state: t.state,
     gstin: t.gstin,
     status: t.status,
-    whatsapp: { number: t.whatsappNumber, enabled: t.whatsappEnabled, greeting: t.whatsappGreeting, orderShare: t.whatsappOrderShare },
+    whatsapp: { number: t.whatsappNumber, enabled: t.whatsappEnabled, greeting: t.whatsappGreeting, orderShare: t.whatsappOrderShare, pages: t.whatsappPages },
     upi: { vpa: t.upiVpa, name: t.upiName },
     payments: {
       cod: t.enableCod,

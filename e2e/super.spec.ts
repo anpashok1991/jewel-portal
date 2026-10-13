@@ -43,6 +43,13 @@ test.describe("platform console", () => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText(/plan/i);
     await page.goto("/super/users", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { level: 1 })).toContainText(/user/i);
+
+    // handover guide: checklist + feature walkthrough per shop
+    await page.goto("/super/handover", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { level: 1, name: /handover/i })).toBeVisible();
+    await expect(page.getByText(/Before you hand over/i)).toBeVisible();
+    await expect(page.getByText(/Feature walkthrough for the owner/i)).toBeVisible();
+    await expect(page.getByText(/Handover script/i)).toBeVisible();
   });
 
   test("delete a shop with the 2-click red danger zone", async ({ page }) => {

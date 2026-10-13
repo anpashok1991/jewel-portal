@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { purchaseDetailsMessage, waMeUrl, type PurchaseDetailsInput } from "@/lib/whatsapp";
+import {
+  purchaseDetailsMessage,
+  waMeUrl,
+  whatsappPageType,
+  parseWhatsappPages,
+  WHATSAPP_PAGE_TYPES,
+  type PurchaseDetailsInput,
+} from "@/lib/whatsapp";
 
 const placed = new Date("2026-10-13T09:30:00+05:30");
 
@@ -71,5 +78,41 @@ describe("purchaseDetailsMessage", () => {
     expect(href).not.toContain("\n");
     expect(href).toContain("%0A");
     expect(decodeURIComponent(href.split("?text=")[1])).toContain("Order: MAJ-20261013-0001");
+  });
+});
+
+describe("whatsappPageType", () => {
+  const slug = "maa-anjani-jewelers";
+  it("classifies slug-prefixed storefront paths", () => {
+    expect(whatsappPageType(`/${slug}`, slug)).toBe("home");
+    expect(whatsappPageType(`/${slug}/`, slug)).toBe("home");
+    expect(whatsappPageType(`/${slug}/shop`, slug)).toBe("shop");
+    expect(whatsappPageType(`/${slug}/search`, slug)).toBe("shop");
+    expect(whatsappPageType(`/${slug}/p/divine-lotus-ring`, slug)).toBe("product");
+    expect(whatsappPageType(`/${slug}/cart`, slug)).toBe("checkout");
+    expect(whatsappPageType(`/${slug}/checkout`, slug)).toBe("checkout");
+    expect(whatsappPageType(`/${slug}/order/abc123`, slug)).toBe("order");
+    expect(whatsappPageType(`/${slug}/rates`, slug)).toBe("other");
+    expect(whatsappPageType(`/${slug}/contact`, slug)).toBe("other");
+  });
+  it("classifies custom-domain paths (no slug prefix)", () => {
+    expect(whatsappPageType("/", slug)).toBe("home");
+    expect(whatsappPageType("/p/x", slug)).toBe("product");
+    expect(whatsappPageType("/cart", slug)).toBe("checkout");
+    expect(whatsappPageType("/order/xyz", slug)).toBe("order");
+    expect(whatsappPageType("/schemes", slug)).toBe("other");
+  });
+});
+
+describe("parseWhatsappPages", () => {
+  it("keeps known types in canonical order and drops unknown keys", () => {
+    expect(parseWhatsappPages("product,home,bogus,order")).toEqual(["home", "product", "order"]);
+  });
+  it("returns empty for a blank CSV", () => {
+    expect(parseWhatsappPages("")).toEqual([]);
+    expect(parseWhatsappPages(" , ")).toEqual([]);
+  });
+  it("the schema default enables every page type", () => {
+    expect(parseWhatsappPages(WHATSAPP_PAGE_TYPES.join(","))).toEqual([...WHATSAPP_PAGE_TYPES]);
   });
 });

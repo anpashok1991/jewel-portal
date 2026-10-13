@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getSession, can } from "@/lib/auth";
 import { FEATURE_LIST } from "@/lib/constants";
+import { WHATSAPP_PAGE_TYPES } from "@/lib/whatsapp";
 import type { ManageState } from "./manage";
 
 export type { ManageState };
@@ -108,6 +109,7 @@ export async function saveWhatsApp(_prev: ManageState, fd: FormData): Promise<Ma
       whatsappGreeting: String(fd.get("whatsappGreeting") ?? "").trim() || "Hi! I need help.",
       whatsappEnabled: fd.get("whatsappEnabled") === "on",
       whatsappOrderShare: fd.get("whatsappOrderShare") === "on",
+      whatsappPages: WHATSAPP_PAGE_TYPES.filter((t) => fd.getAll("whatsappPages").map(String).includes(t)).join(","),
     },
   });
   await revalidateSettings(s.shopId);

@@ -6,6 +6,39 @@ import { waMeUrl } from "./upi";
 
 export { waMeUrl };
 
+// ── Per-page-type gating for the floating WhatsApp button (FR-15) ─────────────
+
+export const WHATSAPP_PAGE_TYPES = ["home", "shop", "product", "checkout", "order", "other"] as const;
+export type WhatsappPageType = (typeof WHATSAPP_PAGE_TYPES)[number];
+
+export const WHATSAPP_PAGE_LABELS: Record<WhatsappPageType, string> = {
+  home: "Home",
+  shop: "Shop & search",
+  product: "Product pages",
+  checkout: "Cart & checkout",
+  order: "Order tracking",
+  other: "Other pages (rates, schemes, contact…)",
+};
+
+/** Parses the stored CSV into known page types (unknown keys dropped). */
+export function parseWhatsappPages(csv: string): WhatsappPageType[] {
+  const set = new Set(csv.split(",").map((s) => s.trim()).filter(Boolean));
+  return WHATSAPP_PAGE_TYPES.filter((t) => set.has(t));
+}
+
+/** Maps a storefront pathname to its page type (handles slug-prefixed + custom-domain paths). */
+export function whatsappPageType(pathname: string, slug: string): WhatsappPageType {
+  let p = pathname;
+  if (p === `/${slug}`) p = "/";
+  else if (p.startsWith(`/${slug}/`)) p = p.slice(slug.length + 1);
+  if (p === "/" || p === "") return "home";
+  if (p.startsWith("/p/")) return "product";
+  if (p === "/cart" || p === "/checkout") return "checkout";
+  if (p.startsWith("/order/")) return "order";
+  if (p === "/shop" || p === "/search") return "shop";
+  return "other";
+}
+
 export type WaOrderItem = {
   name: string;
   purity?: string;

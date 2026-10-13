@@ -67,6 +67,7 @@ const PLATFORM: Row[] = [
   ["Plans", "Monthly subscription tiers (price + included feature keys) assignable to shops."],
   ["Feature flags", "Master list of 20 features; owner can toggle within their shop, super admin can override per shop."],
   ["Users", "Additional platform-console logins with enable/disable (cannot disable yourself)."],
+  ["Handover guide", "/super/handover — per-shop readiness checklist, owner credentials and a step-by-step feature walkthrough for handing the shop to its owner."],
   ["App flow", "This page — always available under /super/flow for the application owner."],
 ];
 

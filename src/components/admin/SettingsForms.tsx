@@ -5,6 +5,7 @@ import { saveShopProfile, savePayments, saveCommercials, saveWhatsApp, setFeatur
 import { saveStaff, deleteStaff, type StaffState } from "@/actions/admin/catalog";
 import { resetStaffPassword, type ManageState as M2 } from "@/actions/admin/manage";
 import { FEATURE_LIST } from "@/lib/constants";
+import { WHATSAPP_PAGE_TYPES, WHATSAPP_PAGE_LABELS } from "@/lib/whatsapp";
 
 function Msg({ state }: { state: { ok?: boolean; error?: string } }) {
   if (state?.error) return <p className="text-xs" style={{ color: "var(--c-danger)" }}>{state.error}</p>;
@@ -26,6 +27,7 @@ export type ShopSeed = {
   whatsappGreeting: string;
   whatsappEnabled: boolean;
   whatsappOrderShare: boolean;
+  whatsappPages: string[];
   upiVpa: string;
   upiName: string;
   razorpayKeyId: string;
@@ -197,6 +199,17 @@ export function WhatsAppForm({ shop }: { shop: ShopSeed }) {
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" name="whatsappOrderShare" defaultChecked={shop.whatsappOrderShare} /> Send purchase details over WhatsApp (order pages)
       </label>
+      <div>
+        <p className="text-xs uppercase tracking-wide text-muted mb-1.5">Show floating button on</p>
+        <div className="grid sm:grid-cols-2 gap-1.5 text-sm">
+          {WHATSAPP_PAGE_TYPES.map((t) => (
+            <label key={t} className="flex items-center gap-2 rounded-lg border px-3 py-2" style={{ borderColor: "rgba(0,0,0,.1)" }}>
+              <input type="checkbox" name="whatsappPages" value={t} defaultChecked={shop.whatsappPages.includes(t)} />
+              <span>{WHATSAPP_PAGE_LABELS[t]}</span>
+            </label>
+          ))}
+        </div>
+      </div>
       <Msg state={state} />
       <button className="btn btn-primary" disabled={pending}>{pending ? "Saving…" : "Save WhatsApp"}</button>
     </form>

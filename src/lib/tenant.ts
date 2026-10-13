@@ -3,6 +3,7 @@ import { cache } from "react";
 import { notFound } from "next/navigation";
 import { db } from "./db";
 import type { FeatureKey } from "./constants";
+import { parseWhatsappPages } from "./whatsapp";
 
 export type ThemeColors = {
   primary: string;
@@ -45,6 +46,7 @@ export type Tenant = {
   whatsappGreeting: string;
   whatsappEnabled: boolean;
   whatsappOrderShare: boolean;
+  whatsappPages: string[];
   upiVpa: string;
   upiName: string;
   razorpayKeyId: string;
@@ -105,6 +107,7 @@ export const getTenant = cache(async function getTenant(slug: string): Promise<T
     whatsappGreeting: shop.whatsappGreeting,
     whatsappEnabled: shop.whatsappEnabled,
     whatsappOrderShare: shop.whatsappOrderShare,
+    whatsappPages: parseWhatsappPages(shop.whatsappPages),
     upiVpa: shop.upiVpa,
     upiName: shop.upiName,
     razorpayKeyId: shop.razorpayKeyId,

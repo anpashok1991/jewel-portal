@@ -48,8 +48,8 @@ total        = taxable + gst + shipping + codFee − roundOff
 - Redemption: checkout accepts wallet money and gold mg (converted at current rate).
 
 ## Payments (FR-18)
-- Settings per shop: `razorpayKeyId/Secret`, `upiVpa`, `upiName`, `codFee`, `codMaxAmount`, `whatsappNumber/whatsappGreeting/whatsappEnabled/whatsappOrderShare`.
-- WhatsApp is free-tier only (no Meta API): `whatsappOrderShare` toggle drives `wa.me` purchase-details deep links on order pages (admin order detail → customer number; storefront order page → shop number), built by `src/lib/whatsapp.ts`.
+- Settings per shop: `razorpayKeyId/Secret`, `upiVpa`, `upiName`, `codFee`, `codMaxAmount`, `whatsappNumber/whatsappGreeting/whatsappEnabled/whatsappOrderShare/whatsappPages`.
+- WhatsApp is free-tier only (no Meta API): `whatsappOrderShare` toggle drives `wa.me` purchase-details deep links on order pages (admin order detail → customer number; storefront order page → shop number); `whatsappPages` (CSV of `home,shop,product,checkout,order,other`) gates which page types show the floating button — both built on `src/lib/whatsapp.ts`.
 - `POST /api/razorpay/create` → order (amount paise) → client `Razorpaycheckout` → `POST /api/razorpay/verify` (HMAC SHA256) → order CONFIRMED; webhook path idempotent.
 - UPI QR: build `upi://pay?pa=&pn=&am=&cu=INR&tn=` → `qrcode.toDataURL` server-side.
 - Refunds on cancel: mark `refundStatus` + create wallet credit fallback if keys missing (test mode).
@@ -82,7 +82,7 @@ src/
     [slug]/admin/…          # shop admin (login + (panel): dashboard, orders, products,
                             # leads, schemes, marketing, rates, reports, settings)
     [slug]/admin/reports/csv# CSV export route handler
-    super/…                 # platform console (login + (panel): dashboard, shops, plans, users)
+    super/…                 # platform console (login + (panel): dashboard, shops, handover, plans, users)
     api/…                   # upload, chat, invoice PDF, payment verify
 prisma/{schema.prisma, seed.ts}
 tests/                      # vitest unit tests

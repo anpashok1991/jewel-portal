@@ -50,6 +50,7 @@ model Shop {
   whatsappGreeting  String  @default("Hi! I need help.")
   whatsappEnabled   Boolean @default(true)
   whatsappOrderShare Boolean @default(true) // shop-admin toggle: share purchase details over WhatsApp (free wa.me links)
+  whatsappPages     String  @default("home,shop,product,checkout,order,other") // page types where the floating button shows
   upiVpa            String  @default("")
   upiName           String  @default("")
   razorpayKeyId     String  @default("")

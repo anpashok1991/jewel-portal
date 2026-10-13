@@ -93,7 +93,7 @@ export default function Header(props: Props) {
           <div className="flex items-center gap-1 ml-auto md:ml-2">
             <Link href={props.userHref} className="hidden sm:flex flex-col items-center px-2 py-1.5 text-[11px] leading-tight hover:opacity-80 min-w-11" aria-label="Account">
               <span className="text-base leading-none">👤</span>
-              <span className="truncate max-w-16">{props.userName ? props.userName.split(" ")[0] : "Login"}</span>
+              <span className="truncate max-w-16">{props.userName ? "Account" : "Login"}</span>
             </Link>
             <Link href={`/${props.slug}/wishlist`} className="hidden sm:flex flex-col items-center px-2 py-1.5 text-[11px] leading-tight hover:opacity-80 min-w-11" aria-label="Wishlist">
               <span className="text-base leading-none">♡</span>
@@ -137,7 +137,7 @@ export default function Header(props: Props) {
             <Link href={`/${props.slug}/appointment`} className="block py-2.5" onClick={() => setOpen(false)}>Book Appointment</Link>
             <Link href={`/${props.slug}/exchange`} className="block py-2.5" onClick={() => setOpen(false)}>Old Gold Exchange</Link>
             <Link href={`/${props.slug}/contact`} className="block py-2.5" onClick={() => setOpen(false)}>Contact</Link>
-            <Link href={props.userHref} className="block py-2.5" onClick={() => setOpen(false)}>{props.userName ? `My Account (${props.userName.split(" ")[0]})` : "Login / Register"}</Link>
+            <Link href={props.userHref} className="block py-2.5" onClick={() => setOpen(false)}>{props.userName ? "My Account" : "Login / Register"}</Link>
             <Link href={`/${props.slug}/wishlist`} className="block py-2.5" onClick={() => setOpen(false)}>Wishlist</Link>
           </div>
         </div>

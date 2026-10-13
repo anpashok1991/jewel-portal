@@ -80,7 +80,7 @@ export default async function WebLayout({
       <main className="flex-1">{children}</main>
       <Footer tenant={tenant} whatsappLink={waHref} />
       {tenant.whatsappEnabled && tenant.whatsappNumber ? (
-        <WhatsAppFab number={tenant.whatsappNumber} greeting={tenant.whatsappGreeting} />
+        <WhatsAppFab number={tenant.whatsappNumber} greeting={tenant.whatsappGreeting} slug={tenant.slug} pages={tenant.whatsappPages} />
       ) : null}
       <SamBotWidget
         slug={slug}

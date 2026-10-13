@@ -9,6 +9,8 @@ test.describe("storefront", () => {
     // hero shows jewelry line-art SVG (no more 3D canvas)
     await expect(page.locator("svg.jewel-art, section.hero-shell svg").first()).toBeAttached();
     await expect(page.getByRole("button", { name: /slide/i }).first()).toBeVisible();
+    // floating WhatsApp button (default: enabled on all page types)
+    await expect(page.getByRole("button", { name: "Chat on WhatsApp" })).toBeVisible();
   });
 
   test("shop listing shows products", async ({ page }) => {

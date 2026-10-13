@@ -90,5 +90,7 @@ test.describe("shop admin", () => {
     await expect(page.getByRole("heading", { name: "WhatsApp" })).toBeVisible();
     await expect(page.getByLabel(/Send purchase details over WhatsApp/i)).toBeVisible();
     await expect(page.getByLabel(/Show WhatsApp button on storefront/i)).toBeVisible();
+    await expect(page.getByText("Show floating button on")).toBeVisible();
+    await expect(page.getByLabel(/Product pages/i)).toBeVisible();
   });
 });

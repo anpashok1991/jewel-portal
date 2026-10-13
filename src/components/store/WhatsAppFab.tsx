@@ -3,13 +3,15 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { waMeUrl } from "@/lib/upi";
+import { whatsappPageType } from "@/lib/whatsapp";
 
-type Props = { number: string; greeting: string };
+type Props = { number: string; greeting: string; slug: string; pages: string[] };
 
-export default function WhatsAppFab({ number, greeting }: Props) {
+export default function WhatsAppFab({ number, greeting, slug, pages }: Props) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   if (!number) return null;
+  if (!pages.includes(whatsappPageType(pathname, slug))) return null;
 
   const msg = `${greeting}\n\nPage: ${pathname}`;
   const href = waMeUrl(number, msg);

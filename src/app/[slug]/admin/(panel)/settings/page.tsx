@@ -49,6 +49,7 @@ export default async function AdminSettingsPage({ params }: { params: Promise<{ 
     whatsappGreeting: shop.whatsappGreeting,
     whatsappEnabled: shop.whatsappEnabled,
     whatsappOrderShare: shop.whatsappOrderShare,
+    whatsappPages: shop.whatsappPages.split(",").filter(Boolean),
     upiVpa: shop.upiVpa,
     upiName: shop.upiName,
     razorpayKeyId: shop.razorpayKeyId,
