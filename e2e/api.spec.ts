@@ -42,6 +42,8 @@ test.describe("api v1 (mobile client contract)", () => {
     const profileBody = await profile.json();
     expect(profileBody.name).toBeTruthy();
     expect(profileBody).not.toHaveProperty("razorpaySecret");
+    expect(profileBody.whatsapp.orderShare).toBe(true);
+    expect(typeof profileBody.whatsapp.number).toBe("string");
 
     const home = await request.get(`/api/v1/shops/${SLUG}/home`);
     expect(home.status()).toBe(200);
