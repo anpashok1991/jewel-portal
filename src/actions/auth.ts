@@ -33,18 +33,25 @@ export async function registerCustomer(_prev: AuthState, formData: FormData): Pr
   const next = String(formData.get("next") ?? "");
 
   if (!name || !email || password.length < 6) return { error: "Name, email and a 6+ character password are required." };
-  if (!shopId) return { error: "Shop context missing." };
+
+  // Resolve the shop server-side — never trust the posted shopId.
+  const shop = shopSlug
+    ? await db.shop.findUnique({ where: { slug: shopSlug } })
+    : shopId
+      ? await db.shop.findUnique({ where: { id: shopId } })
+      : null;
+  if (!shop || shop.status === "BLOCKED") return { error: "This shop is not accepting new registrations." };
 
   const existing = await db.user.findUnique({ where: { email } });
   if (existing) return { error: "An account with this email already exists. Try logging in." };
 
   const user = await db.user.create({
-    data: { name, email, phone, passwordHash: await hashPassword(password), role: "CUSTOMER", shopId },
+    data: { name, email, phone, passwordHash: await hashPassword(password), role: "CUSTOMER", shopId: shop.id },
   });
-  await db.wallet.create({ data: { shopId, userId: user.id } });
+  await db.wallet.create({ data: { shopId: shop.id, userId: user.id } });
 
-  await setSessionCookie({ uid: user.id, role: "CUSTOMER", shopId, name, email, pool: "shop" });
-  redirect(next && next.startsWith("/") ? next : shopSlug ? `/${shopSlug}` : "/");
+  await setSessionCookie({ uid: user.id, role: "CUSTOMER", shopId: shop.id, name, email, pool: "shop" });
+  redirect(next && next.startsWith("/") ? next : `/${shop.slug}`);
 }
 
 export async function loginShopAdmin(_prev: AuthState, formData: FormData): Promise<AuthState> {

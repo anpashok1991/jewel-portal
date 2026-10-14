@@ -83,6 +83,25 @@ export async function saveProduct(_prev: ProductState, formData: FormData): Prom
     }));
 
   const branchIds = String(formData.get("branchIds") ?? "").split(",").filter(Boolean);
+  const materialId = String(formData.get("materialId") ?? "") || null;
+  const audienceId = String(formData.get("audienceId") ?? "") || null;
+
+  // Every referenced category/branch must belong to THIS shop.
+  const typeCat = await db.category.findFirst({ where: { id: typeId, shopId: s.shopId }, select: { id: true } });
+  if (!typeCat) return { error: "Pick a product type from your own catalog." };
+  if (materialId) {
+    const mat = await db.category.findFirst({ where: { id: materialId, shopId: s.shopId }, select: { id: true } });
+    if (!mat) return { error: "Invalid material category." };
+  }
+  if (audienceId) {
+    const aud = await db.category.findFirst({ where: { id: audienceId, shopId: s.shopId }, select: { id: true } });
+    if (!aud) return { error: "Invalid audience category." };
+  }
+  if (branchIds.length) {
+    const ownBranches = await db.branch.findMany({ where: { id: { in: branchIds }, shopId: s.shopId }, select: { id: true } });
+    if (ownBranches.length !== new Set(branchIds).size) return { error: "Invalid branch selection." };
+  }
+
   const inventory: { branchId: string; qty: number }[] = [];
   for (const b of branchIds) {
     const raw = formData.get(`inv_${b}`);
@@ -95,8 +114,8 @@ export async function saveProduct(_prev: ProductState, formData: FormData): Prom
     description: String(formData.get("description") ?? "").trim(),
     sku: String(formData.get("sku") ?? "").trim(),
     typeId,
-    materialId: String(formData.get("materialId") ?? "") || null,
-    audienceId: String(formData.get("audienceId") ?? "") || null,
+    materialId,
+    audienceId,
     metal: String(formData.get("metal") ?? "GOLD"),
     purity: String(formData.get("purity") ?? "22K"),
     netWeightMg: Math.max(0, Math.round(num("netWeightG") * 1000)),

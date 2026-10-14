@@ -113,6 +113,10 @@ export async function topUpWallet(_prev: SchemeState, formData: FormData): Promi
   if (!rupees || rupees < 100) return { error: "Minimum top-up ₹100." };
   const shopId = String(formData.get("shopId") ?? s.shopId);
 
+  // Wallet rows are per (user, shop); validate the shop is real and open.
+  const shop = await db.shop.findUnique({ where: { id: shopId }, select: { status: true } });
+  if (!shop || shop.status === "BLOCKED") return { error: "This shop is not available." };
+
   let wallet = await db.wallet.findUnique({ where: { userId_shopId: { userId: s.uid, shopId } } });
   if (!wallet) wallet = await db.wallet.create({ data: { userId: s.uid, shopId } });
 

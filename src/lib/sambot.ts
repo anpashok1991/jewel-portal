@@ -54,27 +54,55 @@ export async function samBotReply(
     return { text: `Rates for ${shop.name} haven't been published yet. Please try again later or ask the shop directly.` };
   }
 
-  // ---- order status
+  // ---- order status (requires last-4 of the phone used at checkout)
   const orderMatch = message.match(/\b([A-Za-z]{2,5}-\d{6,8}-\d{1,5})\b/) ?? message.match(/\border\s*#?\s*([A-Za-z0-9-]{5,})\b/i);
   if (orderMatch || /\b(track|order status|my order|where is my order|delivery status)\b/.test(m)) {
     if (orderMatch) {
+      const number = orderMatch[1].toUpperCase();
+      // Optional phone check: 4 digits elsewhere in the message (not part of the order number).
+      const rest = message.replace(orderMatch[0], " ");
+      const check = rest.match(/\b(\d{4})\b/)?.[1] ?? "";
+      if (!check) {
+        return {
+          text: `Please reply with your order number and the last 4 digits of the phone number used at checkout so I can verify it's you (e.g. "${number} 6789").`,
+        };
+      }
       const order = await db.order.findFirst({
-        where: { shopId: shop.id, number: orderMatch[1].toUpperCase() },
-        include: { branch: { select: { name: true } }, items: { select: { name: true, qty: true } } },
+        where: { shopId: shop.id, number },
+        include: {
+          branch: { select: { name: true } },
+          items: { select: { name: true, qty: true } },
+          user: { select: { phone: true } },
+        },
       });
-      if (!order) return { text: `I couldn't find order \`${orderMatch[1]}\` at ${shop.name}. Please check the order number (it looks like MAJ-20251008-0001).` };
-      const eta = order.etaDate ? `\nExpected: ${order.etaDate}` : "";
-      const courier = order.awb ? `\nCourier: ${order.courier} • AWB ${order.awb}` : "";
+      let addrPhone = "";
+      try {
+        addrPhone = String((JSON.parse(order?.addressJson ?? "{}") as { phone?: string }).phone ?? "");
+      } catch {
+        addrPhone = "";
+      }
+      const digits = (v: string) => v.replace(/\D/g, "");
+      const phones = [order?.user.phone ?? "", addrPhone].map(digits).filter(Boolean);
+      const verified = !!order && phones.some((p) => p.endsWith(check));
+      if (!verified) {
+        // Same reply whether the order exists or the digits are wrong — no enumeration.
+        return {
+          text: `I couldn't verify order ${number}. Please check the order number and the last 4 digits of the phone number used at checkout.`,
+        };
+      }
+      const o = order;
+      const eta = o.etaDate ? `\nExpected: ${o.etaDate}` : "";
+      const courier = o.awb ? `\nCourier: ${o.courier} • AWB ${o.awb}` : "";
       return {
-        text: `Order ${order.number}\nStatus: ${order.status.replace("_", " ")}\nItems: ${order.items.map((i) => `${i.name} ×${i.qty}`).join(", ")}${courier}${eta}`,
+        text: `Order ${o.number}\nStatus: ${o.status.replace("_", " ")}\nItems: ${o.items.map((i) => `${i.name} ×${i.qty}`).join(", ")}${courier}${eta}`,
         chips: [
-          { label: "Open tracking page", href: `/account/orders/${order.id}` },
+          { label: "Open tracking page", href: `/account/orders/${o.id}` },
           { label: "Need help?", say: "talk to staff" },
         ],
       };
     }
     return {
-      text: `Share your order number (e.g. MAJ-20251008-0001) and I'll pull live status for you. You can also see all orders in your account.`,
+      text: `Share your order number and the last 4 digits of the phone used at checkout (e.g. MAJ-20251008-0001 6789) and I'll pull live status for you.`,
       chips: [{ label: "My orders", href: "/account/orders" }],
     };
   }

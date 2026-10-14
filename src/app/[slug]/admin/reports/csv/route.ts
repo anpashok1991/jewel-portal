@@ -9,7 +9,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
   const { slug } = await params;
   const tenant = await requireTenant(slug);
   const session = await getSession();
-  if (!session || session.pool !== "shop" || !(await can(session, "reports", "view"))) {
+  if (!session || session.pool !== "shop" || session.shopId !== tenant.id || !(await can(session, "reports", "view"))) {
     return new Response("Forbidden", { status: 403 });
   }
 

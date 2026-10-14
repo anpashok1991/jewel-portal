@@ -6,6 +6,11 @@ import { getSession } from "@/lib/auth";
 
 export type LeadState = { ok?: boolean; error?: string; id?: string };
 
+async function activeShop(shopId: string) {
+  const shop = await db.shop.findUnique({ where: { id: shopId }, select: { status: true } });
+  return shop && shop.status !== "BLOCKED";
+}
+
 export async function bookAppointment(_prev: LeadState, formData: FormData): Promise<LeadState> {
   const shopId = String(formData.get("shopId") ?? "");
   const branchId = String(formData.get("branchId") ?? "");
@@ -21,6 +26,9 @@ export async function bookAppointment(_prev: LeadState, formData: FormData): Pro
     return { error: "Please fill name, phone, branch, date and slot." };
   }
   if (phone.replace(/\D/g, "").length < 10) return { error: "Enter a valid 10-digit phone number." };
+  if (!(await activeShop(shopId))) return { error: "This shop is not accepting bookings." };
+  const branch = await db.branch.findFirst({ where: { id: branchId, shopId }, select: { id: true } });
+  if (!branch) return { error: "Please pick a valid branch." };
 
   const s = await getSession();
   const existing = await db.appointment.findFirst({
@@ -50,6 +58,7 @@ export async function requestExchange(_prev: LeadState, formData: FormData): Pro
   const note = String(formData.get("note") ?? "");
 
   if (!shopId || !name || !phone || grossWeightG <= 0) return { error: "Name, phone and gross weight are required." };
+  if (!(await activeShop(shopId))) return { error: "This shop is not accepting requests." };
 
   const s = await getSession();
   await db.exchangeRequest.create({
@@ -69,6 +78,7 @@ export async function submitQuery(_prev: LeadState, formData: FormData): Promise
   const source = String(formData.get("source") ?? "CONTACT");
 
   if (!shopId || !name || !message) return { error: "Name and message are required." };
+  if (!(await activeShop(shopId))) return { error: "This shop is not accepting queries." };
 
   const s = await getSession();
   await db.query.create({ data: { shopId, userId: s?.uid, name, phone, email, subject, message, source } });
